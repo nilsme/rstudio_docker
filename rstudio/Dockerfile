@@ -74,5 +74,3 @@ RUN mkdir -p /etc/R
 
 # expose standard port for rstudio-server
 EXPOSE 8787
-
-ENTRYPOINT service rstudio-server start && /bin/bash
