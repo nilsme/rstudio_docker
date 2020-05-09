@@ -29,8 +29,8 @@ services:
 
   rstudio:
     build: ./rstudio
-    image: rstudio
-    container_name: rstudio
+    image: rstudio_with_proxy
+    container_name: rstudio_with_proxy
     stdin_open: true
     tty: true
     volumes:
