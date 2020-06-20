@@ -38,7 +38,6 @@ RUN apt-get -y update && \
     libxt6 \
     lsb-release \
     net-tools \
-    odbc-postgresql \
     openssh-client \
     protobuf-compiler \
     python-pip \
@@ -53,7 +52,14 @@ RUN apt-get -y update && \
     texlive-xetex \
     unixodbc \
     unixodbc-dev \
-    wget
+    # SQL Server ODBC Drivers (Free TDS)
+    tdsodbc \
+    # PostgreSQL ODBC ODBC Drivers
+    odbc-postgresql \
+    # MySQL ODBC Drivers
+    # libmyodbc \
+    # SQLite ODBC Drivers
+    libsqliteodbc
     
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
@@ -63,17 +69,19 @@ RUN echo 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/' >> /e
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
     apt-get update
 
-# install r-base & clean up
-RUN apt-get install -y r-base && \
-    apt-get purge && \
-    apt-get clean
+# install r-base
+RUN apt-get install -y r-base
 
 # install rstudio-server
-RUN apt-get install -y gdebi-core && \
+RUN apt-get install -y wget gdebi-core && \
     wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.2.5019-amd64.deb && \
-    gdebi -n rstudio-server-1.2.5019-amd64.deb && \
+    gdebi -n rstudio-server-1.2.5019-amd64.deb
+
+# clean up
+RUN apt-get purge && \
+    apt-get clean && \
     rm rstudio-server-1.2.5019-amd64.deb
-    
+
 # add directory for R related files
 RUN mkdir -p /etc/R 
 
