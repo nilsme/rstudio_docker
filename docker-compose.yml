@@ -15,9 +15,11 @@ services:
       - proxy-tier
 
   proxy:
-    build: ./proxy
+    build:
+      context: ./proxy
     image: proxy_rstudio
     container_name: proxy_rstudio
+    restart: unless-stopped
     ports:
       - 10443:443/tcp
     volumes:
@@ -28,17 +30,22 @@ services:
       - omgwtfssl
 
   rstudio:
-    build: ./rstudio
+    build:
+      context: ./rstudio
+      args:
+        - RSTUDIO_VERSION=1.2.5042
+        - S6_VERSION=2.0.0.1
     image: rstudio_with_proxy
     container_name: rstudio_with_proxy
+    restart: unless-stopped
     stdin_open: true
     tty: true
+    stdin_open: true
     volumes:
-       - /home:/home
-       - /etc/passwd:/etc/passwd
-       - /etc/group:/etc/group
-       - /etc/shadow:/etc/shadow
-    command: /etc/init.d/rstudio-server start && /bin/bash
+      - /home:/home
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      - /etc/shadow:/etc/shadow:ro
     networks:
       - proxy-tier
 

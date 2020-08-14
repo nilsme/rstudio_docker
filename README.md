@@ -23,3 +23,17 @@ Go to the main directory with the `docker-compose.yml` and run
 `docker-compose up -d` to build and start all containers in detached mode.
 After a successful run RStudio can be accessed on
 `https://<ip-of-your-machine>:10443`.
+
+## Troubleshooting
+
+If RStudio Server does not install correctly during the build, it may got stuck
+on number of open files. You can build it manually with the following command
+and use `docker-compose` just as a start-up an not build setup.
+
+```shell
+sudo docker build ./rstudio \
+  -t rstudio_with_proxy \
+  --build-arg RSTUDIO_VERSION=1.2.5042 \
+  --build-arg S6_VERSION=2.0.0.1 \
+  --ulimit nofile=65535:65535
+```
