@@ -40,7 +40,6 @@ services:
     restart: unless-stopped
     stdin_open: true
     tty: true
-    stdin_open: true
     volumes:
       - /home:/home
       - /etc/passwd:/etc/passwd:ro
