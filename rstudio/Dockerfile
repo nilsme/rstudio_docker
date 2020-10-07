@@ -4,6 +4,10 @@ FROM ubuntu:18.04
 ARG RSTUDIO_VERSION=1.2.5042
 ARG S6_VERSION=2.0.0.1
 
+# set repository variables
+ARG CRAN_REPO='deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/'
+ARG CRAN_KEY=E298A3A825C0D65DFD57CBB651716619E084DAB9
+
 # set environment
 ENV DEBIAN_FRONTEND noninteractive
 ENV TZ=Europe/Amsterdam
@@ -67,24 +71,26 @@ RUN apt-get -y update && \
     # MySQL ODBC Drivers
     # libmyodbc \ -> No installation candidate in repository!
     # SQLite ODBC Drivers
-    libsqliteodbc
+    libsqliteodbc && \
+    # clean up
+    apt-get purge && \
+    apt-get clean
 
 # add R version 4.x.x repository and install latest r-base
-RUN echo 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/' >> /etc/apt/sources.list && \
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
+RUN echo ${CRAN_REPO} >> /etc/apt/sources.list && \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ${CRAN_KEY} && \
     apt-get update && \
-    apt-get install -y r-base
-
-# add directory for R related files
-RUN mkdir -p /etc/R
+    apt-get install -y r-base && \
+    # clean up
+    apt-get purge && \
+    apt-get clean
 
 # install rstudio-server
 RUN apt-get install -y wget gdebi-core && \
     wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb && \
-    gdebi -n rstudio-server-${RSTUDIO_VERSION}-amd64.deb
-
-# clean up
-RUN apt-get purge && \
+    gdebi -n rstudio-server-${RSTUDIO_VERSION}-amd64.deb && \
+    # clean up
+    apt-get purge && \
     apt-get clean && \
     rm rstudio-server-${RSTUDIO_VERSION}-amd64.deb
 
