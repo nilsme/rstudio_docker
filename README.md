@@ -32,7 +32,7 @@ and use `docker-compose` just as a start-up an not build setup.
 
 ```shell
 sudo docker build ./rstudio \
-  -t rstudio_with_proxy \
+  -t rstudio_docker_app \
   --build-arg RSTUDIO_VERSION=1.2.5042 \
   --build-arg S6_VERSION=2.0.0.1 \
   --ulimit nofile=65535:65535
