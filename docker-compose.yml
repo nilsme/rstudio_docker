@@ -46,7 +46,6 @@ services:
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
       - /etc/shadow:/etc/shadow:ro
-    # command: bash -c "/usr/lib/rstudio-server/bin/rserver --server-daemonize 0"
     networks:
       - proxy-tier
 

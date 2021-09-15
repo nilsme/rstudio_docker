@@ -2,7 +2,6 @@ FROM ubuntu:20.04
 
 # set versions
 ARG RSTUDIO_VERSION
-ARG S6_VERSION
 
 # set repository variables
 ARG CRAN_REPO
