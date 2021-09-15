@@ -1,12 +1,12 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 # set versions
-ARG RSTUDIO_VERSION=1.2.5042
-ARG S6_VERSION=2.0.0.1
+ARG RSTUDIO_VERSION
+ARG S6_VERSION
 
 # set repository variables
-ARG CRAN_REPO='deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/'
-ARG CRAN_KEY=E298A3A825C0D65DFD57CBB651716619E084DAB9
+ARG CRAN_REPO
+ARG CRAN_KEY
 
 # set environment
 ENV DEBIAN_FRONTEND noninteractive
@@ -52,9 +52,9 @@ RUN apt-get -y update && \
     net-tools \
     openssh-client \
     protobuf-compiler \
-    python-pip \
-    python-dev \
-    python-virtualenv \
+    python3-pip \
+    python3-dev \
+    python3-virtualenv \
     tdsodbc \
     texinfo \
     texlive \
@@ -80,7 +80,7 @@ RUN apt-get -y update && \
 RUN echo ${CRAN_REPO} >> /etc/apt/sources.list && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ${CRAN_KEY} && \
     apt-get update && \
-    apt-get install -y r-base && \
+    apt install -y r-base && \
     # clean up
     apt-get purge && \
     apt-get clean
@@ -97,17 +97,5 @@ RUN apt-get install -y wget gdebi-core && \
 # expose standard port for rstudio-server
 EXPOSE 8787
 
-# Set up S6 init system | same as used for official rocker
-RUN wget -P /tmp/ https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-amd64.tar.gz \
-    && tar xzf /tmp/s6-overlay-amd64.tar.gz -C / \
-    && mkdir -p /etc/services.d/rstudio \
-    && echo '#!/usr/bin/with-contenv bash \
-            \n## load /etc/environment vars first: \
-  	        \n for line in $( cat /etc/environment ) ; do export $line ; done \
-            \n exec /usr/lib/rstudio-server/bin/rserver --server-daemonize 0' \
-            > /etc/services.d/rstudio/run \
-    && echo '#!/bin/bash \
-            \n rstudio-server stop' \
-            > /etc/services.d/rstudio/finish
-
-CMD ["/init"]
+# start rstudio-server
+CMD ["/usr/lib/rstudio-server/bin/rserver", "--server-daemonize", "0"]
