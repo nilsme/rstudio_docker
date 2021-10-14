@@ -18,8 +18,11 @@ the certificate can be changed in `docker-compose.yml`.
 
 ## Usage
 
-By using `docker-compose` all images will be loaded or build on the first run.
 Go to the main directory with the `docker-compose.yml` and run
 `docker-compose up -d` to build and start all containers in detached mode.
 After a successful run RStudio can be accessed on
 `https://<ip-of-your-machine>:10443`.
+
+> If you mount the suggested volumes from the host, it does not the user
+> `rstudio-server` otherwise the service will fail to start. You can add
+> such a user on your host with `sudo adduser rstudio-server`.
