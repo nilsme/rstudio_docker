@@ -2,6 +2,7 @@ FROM ubuntu:20.04
 
 # set versions
 ARG RSTUDIO_VERSION
+ARG MINICONDA_VERSION
 
 # set repository variables
 ARG CRAN_REPO
@@ -12,6 +13,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TZ=Europe/Amsterdam
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
+ENV PATH=/opt/python/conda/bin:$PATH
 
 # install system packages
 RUN apt-get -y update && \
@@ -21,6 +23,7 @@ RUN apt-get -y update && \
     # install tzdata
     tzdata \
     # install system dependencies for R packages
+    r-base-dev \
     build-essential \
     default-jdk \
     gfortran \
@@ -55,7 +58,6 @@ RUN apt-get -y update && \
     python3-pip \
     python3-dev \
     python3-virtualenv \
-    tdsodbc \
     texinfo \
     texlive \
     texlive-bibtex-extra \
@@ -64,36 +66,45 @@ RUN apt-get -y update && \
     texlive-xetex \
     unixodbc \
     unixodbc-dev \
-    # SQL Server ODBC Drivers (Free TDS)
     tdsodbc \
-    # PostgreSQL ODBC Drivers
     odbc-postgresql \
-    # SQLite ODBC Drivers
-    libsqliteodbc && \
-    # clean up
-    apt-get purge && \
-    apt-get clean
+    libsqliteodbc
 
 # add R version 4.x.x repository and install latest r-base
 RUN echo ${CRAN_REPO} >> /etc/apt/sources.list && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ${CRAN_KEY} && \
     apt-get update && \
-    apt install -y r-base && \
-    # clean up
-    apt-get purge && \
-    apt-get clean
+    apt install -y r-base
 
 # install rstudio-server
 RUN apt-get install -y wget gdebi-core && \
     wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb && \
     gdebi -n rstudio-server-${RSTUDIO_VERSION}-amd64.deb && \
     # clean up
-    apt-get purge && \
-    apt-get clean && \
     rm rstudio-server-${RSTUDIO_VERSION}-amd64.deb
+
+# install miniconda3 for Python support
+RUN wget https://repo.continuum.io/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh \
+    -O /tmp/miniconda.sh  && \
+    bash /tmp/miniconda.sh -f -b -p /opt/python/conda && \
+    /opt/python/conda/bin/conda install --yes -c conda-forge \
+      python \
+      pip \
+      && \
+    /opt/python/conda/bin/pip install --upgrade pip && \
+    # clean up
+    rm /tmp/miniconda.sh
+
+# make Python visible to RStudio
+RUN echo 'options(rstudio.python.installationPath = "/opt/python/conda/bin")' \
+    >> /etc/Rprofile.site
 
 # expose standard port for rstudio-server
 EXPOSE 8787
+
+# clean up
+RUN apt-get purge && \
+    apt-get clean
 
 # start rstudio-server
 CMD ["/usr/lib/rstudio-server/bin/rserver", "--server-daemonize", "0"]

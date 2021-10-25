@@ -36,6 +36,7 @@ services:
         - CRAN_REPO=${CRAN_REPO}
         - CRAN_KEY=${CRAN_KEY}
         - RSTUDIO_VERSION=${RSTUDIO_VERSION}
+        - MINICONDA_VERSION=${MINICONDA_VERSION}
     image: rstudio_docker_app
     container_name: rstudio_docker_app
     restart: unless-stopped
