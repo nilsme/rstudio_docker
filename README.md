@@ -23,6 +23,6 @@ Go to the main directory with the `docker-compose.yml` and run
 After a successful run RStudio can be accessed on
 `https://<ip-of-your-machine>:10443`.
 
-> If you mount the suggested volumes from the host, it does not the user
-> `rstudio-server` otherwise the service will fail to start. You can add
-> such a user on your host with `sudo adduser rstudio-server`.
+> If you mount the suggested volumes from the host, it does need the user
+> `rstudio-server` on the host system, otherwise the service will fail to start.
+> You can add such a user on your host with `sudo adduser rstudio-server`.
