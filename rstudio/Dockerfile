@@ -42,6 +42,7 @@ RUN apt-get -y update && \
     libproj-dev \
     libprotoc-dev \
     libsecret-1-dev \
+    libsodium-dev \
     libquantlib0-dev \
     libxml2-dev \
     libsasl2-dev \
@@ -67,8 +68,6 @@ RUN apt-get -y update && \
     tdsodbc \
     # PostgreSQL ODBC Drivers
     odbc-postgresql \
-    # MySQL ODBC Drivers
-    # libmyodbc \ -> No installation candidate in repository!
     # SQLite ODBC Drivers
     libsqliteodbc && \
     # clean up
