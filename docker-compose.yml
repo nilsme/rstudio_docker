@@ -1,44 +1,41 @@
 version: '3'
 services:
-  
-  ssl:
-    image: paulczar/omgwtfssl
-    restart: "no"
-    volumes:
-      - certs:/certs
-    environment:
-      - SSL_SUBJECT=${SSL_SUBJECT}
-      - CA_SUBJECT=${CA_SUBJECT}
-      - SSL_KEY=${SSL_KEY}
-      - SSL_CSR=${SSL_CSR}
-      - SSL_CERT=${SSL_CERT}
-    networks:
-      - proxy-tier
 
   proxy:
-    image: nginx
+    image: traefik:v2.5
     container_name: rstudio_docker_proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.tls=true
+      - traefik.http.routers.traefik.rule=Host(`${HOST}`)
+      # Forward traffic to web ui on port 8080
+      - traefik.http.services.traefik.loadbalancer.server.port=8080
     restart: unless-stopped
+    command: --api.insecure=true --providers.docker
     ports:
-      - 10443:443/tcp
+      - "80:80"
+      - "443:443"
     volumes:
-      - certs:/etc/ssl
-      - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Include local config
+      - ./traefik:/etc/traefik:ro
     networks:
-      - proxy-tier
-    depends_on:
-      - ssl
+      - rstudio-net
 
   rstudio:
     build:
       context: ./rstudio
       args:
-        - CRAN_REPO=${CRAN_REPO}
-        - CRAN_KEY=${CRAN_KEY}
+        - R_VERSION=${R_VERSION}
         - RSTUDIO_VERSION=${RSTUDIO_VERSION}
         - MINICONDA_VERSION=${MINICONDA_VERSION}
     image: rstudio_docker_app
     container_name: rstudio_docker_app
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.rstudio.tls=true
+      - traefik.http.routers.rstudio.rule=Host(`rstudio.${HOST}`)
+      - traefik.http.services.rstudio.loadbalancer.server.port=8787
     restart: unless-stopped
     stdin_open: true
     tty: true
@@ -48,10 +45,7 @@ services:
       - /etc/group:/etc/group:ro
       - /etc/shadow:/etc/shadow:ro
     networks:
-      - proxy-tier
-
-volumes:
-  certs:
+      - rstudio-net
 
 networks:
-  proxy-tier:
+  rstudio-net:

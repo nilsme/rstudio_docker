@@ -1,87 +1,79 @@
-FROM ubuntu:20.04
+FROM fedora:34
 
 # set versions
+ARG R_VERSION
 ARG RSTUDIO_VERSION
 ARG MINICONDA_VERSION
 
-# set repository variables
-ARG CRAN_REPO
-ARG CRAN_KEY
-
 # set environment
-ENV DEBIAN_FRONTEND noninteractive
 ENV TZ=Europe/Amsterdam
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 ENV PATH=/opt/python/conda/bin:$PATH
 
 # install system packages
-RUN apt-get -y update && \
-    apt-get -y upgrade && \
+RUN yum -y update && \
+    yum -y install \
     # install git
-    apt-get -y install git \
-    # install tzdata
-    tzdata \
-    # install system dependencies for R packages
-    r-base-dev \
-    build-essential \
-    default-jdk \
-    gfortran \
-    gnome-keyring \
-    jags \
+    git \
+    # install ldap client packages
+    openldap-clients \
+    # install compilers
+    gcc \
+    gcc-c++ \
+    gcc-gfortran \
+    java-latest-openjdk \
+    # install system packages for compilers and R \
+    readline-devel \
+    libX11-devel \
+    libICE-devel \
+    libXt-devel \
+    zlib-devel \
+    cairo \
+    cairo-devel \
+    libcurl-devel \
+    libsodium-devel \
+    gsl-devel \
     jq \
-    libatlas3-base \
-    libboost-all-dev \
-    libcairo2 \
-    libcairo2-dev \
-    libcurl4-openssl-dev \
-    libfftw3-dev \
-    libgdal-dev \
-    libgraphviz-dev \
-    libgsl-dev \
-    libmysqlclient-dev \
-    libnetcdf-dev \
-    libprocps-dev \
-    libproj-dev \
-    libprotoc-dev \
-    libsecret-1-dev \
-    libsodium-dev \
-    libquantlib0-dev \
-    libxml2-dev \
-    libsasl2-dev \
-    libxt-dev \
-    libxt6 \
-    lsb-release \
-    net-tools \
-    openssh-client \
-    protobuf-compiler \
-    python3-pip \
-    python3-dev \
-    python3-virtualenv \
-    texinfo \
+    tesseract \
+    libpng-devel \
+    libtiff-devel \
+    unixODBC-devel \
+    sqlite-devel \
+    postgresql-odbc \
+    openssl-devel \
+    # install latex
     texlive \
-    texlive-bibtex-extra \
-    texlive-fonts-extra \
-    texlive-latex-extra \
-    texlive-xetex \
-    unixodbc \
-    unixodbc-dev \
-    tdsodbc \
-    odbc-postgresql \
-    libsqliteodbc
+    # install auxiliary system packages
+    wget \
+    zip \
+    unzip \
+    vim
 
-# add R version 4.x.x repository and install latest r-base
-RUN echo ${CRAN_REPO} >> /etc/apt/sources.list && \
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ${CRAN_KEY} && \
-    apt-get update && \
-    apt install -y r-base
+# download R and compile R from source
+RUN curl https://cran.rstudio.com/src/base/R-${R_VERSION:0:1}/R-${R_VERSION}.tar.gz \
+    -o /tmp/R-${R_VERSION}.tar.gz && \
+    tar -xzvf /tmp/R-${R_VERSION}.tar.gz -C /tmp && \
+    cd /tmp/R-${R_VERSION} && \
+    ./configure \
+    --prefix=/opt/R/${R_VERSION} \
+    --enable-memory-profiling \
+    --enable-R-shlib \
+    --with-blas \
+    --with-lapack && \
+    make && \
+    make install && \
+    rm /tmp/R-${R_VERSION}.tar.gz
 
-# install rstudio-server
-RUN apt-get install -y wget gdebi-core && \
-    wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb && \
-    gdebi -n rstudio-server-${RSTUDIO_VERSION}-amd64.deb && \
-    # clean up
-    rm rstudio-server-${RSTUDIO_VERSION}-amd64.deb
+# link R
+RUN ln -s /opt/R/${R_VERSION}/bin/R /usr/local/bin/R && \
+    ln -s /opt/R/${R_VERSION}/bin/Rscript /usr/local/bin/Rscript
+
+# download and install rstudio server
+RUN curl https://download2.rstudio.org/server/centos8/x86_64/rstudio-server-rhel-${RSTUDIO_VERSION}-x86_64.rpm \
+    -o /tmp/rstudio-server.rpm && \
+    yum install -y /tmp/rstudio-server.rpm && \
+    rm /tmp/rstudio-server.rpm
 
 # install miniconda3 for Python support
 RUN wget https://repo.continuum.io/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh \
@@ -92,7 +84,6 @@ RUN wget https://repo.continuum.io/miniconda/Miniconda3-${MINICONDA_VERSION}-Lin
       pip \
       && \
     /opt/python/conda/bin/pip install --upgrade pip && \
-    # clean up
     rm /tmp/miniconda.sh
 
 # make Python visible to RStudio
@@ -101,10 +92,6 @@ RUN echo 'options(rstudio.python.installationPath = "/opt/python/conda/bin")' \
 
 # expose standard port for rstudio-server
 EXPOSE 8787
-
-# clean up
-RUN apt-get purge && \
-    apt-get clean
 
 # start rstudio-server
 CMD ["/usr/lib/rstudio-server/bin/rserver", "--server-daemonize", "0"]
