@@ -4,7 +4,7 @@ services:
   proxy:
     build:
       context: ./traefik
-    image: rstudio_docker_proxy
+    image: ${REGISTRY}/rstudio_docker_proxy
     container_name: rstudio_docker_proxy
     labels:
       - traefik.enable=true
@@ -17,7 +17,8 @@ services:
     restart: unless-stopped
     command:
       - "--api"
-      - "--api.insecure=true --providers.docker"
+      - "--api.insecure=true"
+      - "--providers.docker"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
     ports:
@@ -35,7 +36,7 @@ services:
         - R_VERSION=${R_VERSION}
         - RSTUDIO_VERSION=${RSTUDIO_VERSION}
         - MINICONDA_VERSION=${MINICONDA_VERSION}
-    image: rstudio_docker_app
+    image: ${REGISTRY}/rstudio_docker_app
     container_name: rstudio_docker_app
     labels:
       - traefik.enable=true
