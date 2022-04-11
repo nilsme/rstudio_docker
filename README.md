@@ -5,32 +5,41 @@ https proxy. It was mostly done to learn more about container orchestration and
 how to use it in a private network. As no detailed configuration was done, it
 is not advised to use this setup in any productive environment.
 
-The project uses traefik as a reverse proxy that also manages ssl connections
-to all services. Thus, a daemon with active socket communication is required.
-Docker provides this by default.
-
-> For podman sockets can be used as well. E.g. for RHEL/ Fedora install the
-> following packages and enable the service.
-
-```Shell script
-sudo yum install -y podman podman-docker docker-compose
-sudo systemctl enable --now podman.socket
-
-# Allow rootless container
-systemctl --user enable --now podman.socket
-echo -e "export DOCKER_HOST=unix:///run/user/$UID/podman/podman.sock" >> ~/.profile
-```
-
-## Usage
+## Quickstart
 
 Go to the main directory and run `docker-compose up -d` to build and start all
 containers in detached mode.
 
-### Traefik
+Access RStudio at `https://rstudio.localhost`
 
-The dashboard is available on the configured `HOST` or as default `localhost`.
+## Traefik Proxy
 
-> `https://localhost`
+The dashboard is available on `/traefik` the configured `HOST` or as default
+`https://localhost/traefik`.
+
+Traefik is used as a reverse proxy that also manages ssl connections
+to all services. Thus, a daemon with active socket communication is required.
+Docker provides this by default. For podman sockets can be used as well.
+E.g. for RHEL/ Fedora install the  following packages and enable the service.
+
+```shell
+sudo yum install -y podman podman-docker docker-compose
+sudo systemctl enable --now podman.socket
+
+# Check if the socket is available
+sudo curl -H "Content-Type: application/json" \
+  --unix-socket /var/run/docker.sock http://localhost/_ping
+```
+
+Allow rootless container and run as a user.
+
+> If the volume mounts to the host system are used, the container has to be
+> run by root user.
+
+```shell
+systemctl --user enable --now podman.socket
+echo -e "export DOCKER_HOST=unix:///run/user/$UID/podman/podman.sock" >> ~/.profile
+```
 
 ### RStudio
 

@@ -9,11 +9,17 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.traefik.tls=true
-      - traefik.http.routers.traefik.rule=Host(`${HOST}`)
-      # Forward traffic to web ui on port 8080
+      - traefik.http.routers.traefik.rule=(PathPrefix(`/traefik/`) || Headers(`Referer`, `https://${HOST}/traefik/dashboard/`))
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.middlewares=strip-traefik
+      - traefik.http.middlewares.strip-traefik.stripprefix.prefixes=/traefik
       - traefik.http.services.traefik.loadbalancer.server.port=8080
     restart: unless-stopped
-    command: --api.insecure=true --providers.docker
+    command:
+      - "--api"
+      - "--api.insecure=true --providers.docker"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
     ports:
       - "80:80"
       - "443:443"
